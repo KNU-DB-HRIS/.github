@@ -34,13 +34,6 @@ KNU-DB-HRIS는 국립공주대학교 데이터베이스 프로그래밍 Term Pro
       </a><br/>
       <sub>Frontend</sub>
     </td>
-    <td align="center" width="25%">
-      <a href="https://github.com/muonnon">
-        <img src="https://github.com/muonnon.png" width="110" alt="muonnon"/><br/>
-        <b>muonnon</b>
-      </a><br/>
-      <sub>Database</sub>
-    </td>
   </tr>
 </table>
 
