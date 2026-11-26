@@ -64,10 +64,12 @@ KNU-DB-HRIS는 국립공주대학교 데이터베이스 프로그래밍 Term Pro
 | 대시보드 | 조직 및 인사 현황, 주요 통계 시각화 |
 | 인사 관리 | 직원 등록·수정, 인사발령 및 퇴사 관리 |
 | 조직 관리 | 회사·부서·직급·직책·직무 관리 |
-| 급여 관리 | 직원별 급여 정보 및 변경 이력 조회 |
+| 급여 관리 | 직원별 급여 구성 조회, 변경 등록과 이력 |
 | 평가 관리 | 평가 회차, 대상자 및 진행 현황 관리 |
 | 전자결재 | 결재 문서 작성, 상신, 승인·반려 |
 | 문서 관리 | 재직증명서·급여명세서 등 문서 발급 |
+| 일정 | 전사·부서 일정, 사원별 표시 대상 계산 |
+| 계정·권한 | 역할 4개(HR 관리자, 인사 담당자, 인사 사원, 사원), 첫 로그인 비밀번호 변경 |
 | HR AI | 자연어 질문을 SQL로 변환하여 인사 정보 조회 |
 
 ## 시스템 아키텍처 (System Architecture)
@@ -134,6 +136,17 @@ sequenceDiagram
 
 > 생성된 SQL을 AI 서비스가 직접 DB에서 실행하지 않습니다. Flask 백엔드에서 SQL을 검증한 뒤 권한이 제한된 `hris_ai` 계정으로 조회합니다.
 
+## 검증 근거 (For Reviewers)
+
+| 확인할 것 | 위치 |
+| --- | --- |
+| 요구사항 → API → DB → 자동 검사 추적표 | [Database/docs/requirements-trace.md](https://github.com/KNU-DB-HRIS/Database/blob/main/docs/requirements-trace.md) |
+| ERD, 데이터 사전, 마이그레이션 `001`~`025` | [Database](https://github.com/KNU-DB-HRIS/Database) (`docs/erd.md`, `docs/data-dictionary.md`) |
+| 업무 SQL (API가 실행하는 SQL) | [Backend/app/modules](https://github.com/KNU-DB-HRIS/Backend/tree/main/app/modules) (기능별 `routes.py`, `services.py`) |
+| 자동 검사와 최근 결과 | [Backend/tests](https://github.com/KNU-DB-HRIS/Backend/tree/main/tests), [CI 실행 기록](https://github.com/KNU-DB-HRIS/Backend/actions/workflows/ci.yml) |
+| NL2SQL 평가 (질문 19개, Simple·보강 프롬프트 비교) | [Backend/ai/eval/results](https://github.com/KNU-DB-HRIS/Backend/tree/main/ai/eval/results) |
+| 배포된 서비스 | https://knu-db-hris.vercel.app (가상 샘플 데이터) |
+
 ## CI/CD Pipeline
 
 ### CI · 코드 검증 (GitHub Actions)
@@ -172,7 +185,7 @@ flowchart TD
     health --> report["GitHub Actions 결과 / Job Summary"]
 ```
 
-- **CI (`ci.yml`):** Pull Request, `main` Push 및 수동 실행 시 정적 검사, HR AI 단위 테스트, 신규 설치 스모크 테스트를 수행합니다.
+- **CI (`ci.yml`):** Pull Request, `main` Push 및 수동 실행 시 정적 검사, HR AI 단위 테스트를 하고, 빈 서버에 새로 설치한 뒤 API 시나리오 검사(스모크, 제안서 요구사항, 기능, 역할 권한, 첫 로그인, 재직 상태·발령 날짜, 프로시저 `CALL`)를 실행합니다.
 - **CD (`deploy.yml`):** `main` Push에서 배포 대상 경로가 변경되면 실행되며, 수동 배포 또는 상태만 확인하는 모드도 제공합니다.
 - **배포 방식:** 컨테이너 이미지를 별도 레지스트리로 배포하는 방식이 아니라, **Oracle Cloud VM에서 Git 코드를 동기화하고 Docker Compose로 빌드·실행**합니다.
 - **배포 검증:** 컨테이너 상태, 백엔드·AI Health API, 최신 DB 마이그레이션 적용 여부를 확인합니다.
